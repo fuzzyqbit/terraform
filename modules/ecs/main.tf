@@ -137,12 +137,12 @@ module "alb" {
         enabled             = true
         healthy_threshold   = 2
         interval            = 30
-        matcher             = "200"
+        matcher             = "200-399"
         path                = var.health_check_path
         port                = "traffic-port"
         protocol            = "HTTP"
-        timeout             = 5
-        unhealthy_threshold = 2
+        timeout             = 10
+        unhealthy_threshold = 3
       }
     }
   }
@@ -189,6 +189,13 @@ module "ecs_service" {
   name        = var.project_name
   cluster_arn = module.ecs_cluster.arn
 
+  # CRITICAL: Disable autoscaling in the module
+  enable_autoscaling = false
+
+  depends_on = [
+    module.alb
+  ]
+
   # Task Definition
   requires_compatibilities = ["FARGATE"]
   capacity_provider_strategy = {
@@ -207,7 +214,6 @@ module "ecs_service" {
       from_port                = var.container_port
       to_port                  = var.container_port
       protocol                 = "tcp"
-      description              = "Service port"
       source_security_group_id = aws_security_group.alb.id
     }
     egress_all = {
@@ -222,9 +228,7 @@ module "ecs_service" {
   # Container Definition(s)
   container_definitions = {
     (var.app_name) = {
-      image                    = var.app_image
-      readonly_root_filesystem = false
-
+      image = var.app_image
       port_mappings = [
         {
           name          = var.app_name
@@ -232,7 +236,8 @@ module "ecs_service" {
           protocol      = "tcp"
         }
       ]
-
+      
+      enable_cloudwatch_logging = true
       log_configuration = {
         logDriver = "awslogs"
         options = {
@@ -242,10 +247,19 @@ module "ecs_service" {
         }
       }
 
+      # Convert map to list of objects with name and value
       environment = [
         for k, v in var.environment_variables : {
           name  = k
           value = v
+        }
+      ]
+      
+      # Convert secrets map to list of objects with name and valueFrom
+      secrets = [
+        for k, v in var.secrets : {
+          name      = k
+          valueFrom = v
         }
       ]
     }
