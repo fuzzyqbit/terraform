@@ -1,0 +1,42 @@
+```gitignore
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfvars
+*.tfvars.json
+!example.tfvars
+
+# Terragrunt
+.terragrunt-cache/
+terragrunt-debug.tfvars.json
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE
+.idea/
+*.swp
+*.swo
+.vscode/
+
+# Secrets
+*.pem
+*.key
+secrets.auto.tfvars
+```
+
+This covers Terraform state and cache files, Terragrunt cache, macOS system files, common IDE artifacts, and sensitive files like keys. Save this as `.gitignore` in your project root.

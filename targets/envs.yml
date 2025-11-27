@@ -1,0 +1,19 @@
+dev:
+  aws_region: "us-east-1"
+  ecs:
+   inputs:
+     aws_region: "us-east-1"
+     region: "us-east-1"
+     project_name: "my-awesome-app"
+     app_name: "web-service"
+     app_image: "nginx:alpine"
+     container_port:  80
+     health_check_path:  "/health"
+     fargate_cpu: 256
+     fargate_memory: 512
+     desired_count:  3
+     environment_variables: 
+       ENV: "production"
+       LOG_LEVEL: "info"
+   tfvar_files:
+      - dev.tfvars
