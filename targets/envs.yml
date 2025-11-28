@@ -6,14 +6,34 @@ dev:
      region: "us-east-1"
      project_name: "my-awesome-app"
      app_name: "web-service"
-     app_image: "nginx:alpine"
-     container_port:  80
-     health_check_path:  "/health"
+     app_image: "httpd:alpine"
+     container_port: 80
+     health_check_path: "/"
      fargate_cpu: 256
      fargate_memory: 512
-     desired_count:  3
+     desired_count: 3
      environment_variables: 
        ENV: "production"
        LOG_LEVEL: "info"
+   tfvar_files:
+      - dev.tfvars
+  glue:
+   inputs:
+     aws_region: "us-east-1"
+     region: "us-east-1"
+     project_name: nyc-taxi-analytics
+     environment: dev
+     glue_version: "4.0"
+     python_version: "3"
+     worker_type: G.1X
+     number_of_workers: 2
+     max_retries: 1
+     timeout_minutes: 60
+     enable_continuous_log_filter: true
+     enable_metrics: true
+     enable_spark_ui: true
+     tags:
+       Team: DataEngineering
+       CostCenter: Analytics
    tfvar_files:
       - dev.tfvars

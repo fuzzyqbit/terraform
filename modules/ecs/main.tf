@@ -21,7 +21,8 @@ module "vpc" {
   enable_dns_support = true
 
   tags = {
-    Name = "${var.project_name}-vpc"
+    Name        = "${var.project_name}-vpc"
+    Environment = "production"
   }
 }
 
@@ -31,17 +32,8 @@ resource "aws_security_group" "alb" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description = "HTTP"
     from_port   = 80
     to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -67,7 +59,6 @@ resource "aws_security_group" "ecs_tasks" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description     = "Container port"
     from_port       = var.container_port
     to_port         = var.container_port
     protocol        = "tcp"
@@ -102,27 +93,19 @@ module "alb" {
   subnets = module.vpc.public_subnets
   security_groups = [aws_security_group.alb.id]
 
-  listeners = merge(
-    {
-      ex-http = {
-        port     = 80
-        protocol = "HTTP"
-        forward = {
-          target_group_key = "ex-instance"
-        }
+  # Disable deletion protection
+  enable_deletion_protection = false
+
+  # HTTP listener only
+  listeners = {
+    http = {
+      port     = 80
+      protocol = "HTTP"
+      forward = {
+        target_group_key = "ex-instance"
       }
-    },
-    var.enable_https && var.certificate_arn != null ? {
-      ex-https = {
-        port            = 443
-        protocol        = "HTTPS"
-        certificate_arn = var.certificate_arn
-        forward = {
-          target_group_key = "ex-instance"
-        }
-      }
-    } : {}
-  )
+    }
+  }
 
   # Target Groups
   target_groups = {
@@ -138,7 +121,7 @@ module "alb" {
         healthy_threshold   = 2
         interval            = 30
         matcher             = "200-399"
-        path                = var.health_check_path
+        path                = "/"
         port                = "traffic-port"
         protocol            = "HTTP"
         timeout             = 10
@@ -155,10 +138,10 @@ module "alb" {
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "ecs" {
   name              = "/ecs/${var.project_name}"
-  retention_in_days = 7
+  retention_in_days = var.log_retention_days
 
   tags = {
-    Name = "${var.project_name}-log-group"
+    Name = "${var.project_name}-logs"
   }
 }
 
@@ -189,8 +172,34 @@ module "ecs_service" {
   name        = var.project_name
   cluster_arn = module.ecs_cluster.arn
 
-  # CRITICAL: Disable autoscaling in the module
-  enable_autoscaling = false
+  # Enable autoscaling in the module
+  enable_autoscaling = true
+  autoscaling_min_capacity = var.min_capacity
+  autoscaling_max_capacity = var.max_capacity
+
+  # Auto-scaling policies
+  autoscaling_policies = {
+    cpu = {
+      name        = "${var.project_name}-cpu-autoscaling"
+      policy_type = "TargetTrackingScaling"
+      target_tracking_scaling_policy_configuration = {
+        predefined_metric_specification = {
+          predefined_metric_type = "ECSServiceAverageCPUUtilization"
+        }
+        target_value = var.autoscaling_cpu_target
+      }
+    }
+    memory = {
+      name        = "${var.project_name}-memory-autoscaling"
+      policy_type = "TargetTrackingScaling"
+      target_tracking_scaling_policy_configuration = {
+        predefined_metric_specification = {
+          predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+        }
+        target_value = var.autoscaling_memory_target
+      }
+    }
+  }
 
   depends_on = [
     module.alb
@@ -203,6 +212,19 @@ module "ecs_service" {
       capacity_provider = "FARGATE"
       weight            = 1
       base              = 1
+    }
+  }
+
+  # Volumes for httpd writable directories
+  volume = {
+    apache_logs = {
+      name = "apache-logs"
+    }
+    apache_run = {
+      name = "apache-run"
+    }
+    tmp = {
+      name = "tmp"
     }
   }
 
@@ -229,11 +251,31 @@ module "ecs_service" {
   container_definitions = {
     (var.app_name) = {
       image = var.app_image
+      
       port_mappings = [
         {
           name          = var.app_name
           containerPort = var.container_port
           protocol      = "tcp"
+        }
+      ]
+      
+      # Mount writable volumes for httpd
+      mount_points = [
+        {
+          sourceVolume  = "apache-logs"
+          containerPath = "/usr/local/apache2/logs"
+          readOnly      = false
+        },
+        {
+          sourceVolume  = "apache-run"
+          containerPath = "/usr/local/apache2/run"
+          readOnly      = false
+        },
+        {
+          sourceVolume  = "tmp"
+          containerPath = "/tmp"
+          readOnly      = false
         }
       ]
       
