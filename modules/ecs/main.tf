@@ -3,33 +3,10 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# VPC Module
-module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
-
-  name = "${var.project_name}-vpc"
-  cidr = "10.0.0.0/16"
-
-  azs             = slice(data.aws_availability_zones.available.names, 0, 2)
-  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets = ["10.0.11.0/24", "10.0.12.0/24"]
-
-  enable_nat_gateway = true
-  enable_vpn_gateway = false
-  enable_dns_hostnames = true
-  enable_dns_support = true
-
-  tags = {
-    Name        = "${var.project_name}-vpc"
-    Environment = "production"
-  }
-}
-
 # Security Groups
 resource "aws_security_group" "alb" {
   name_prefix = "${var.project_name}-alb-"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 80
@@ -56,7 +33,7 @@ resource "aws_security_group" "alb" {
 
 resource "aws_security_group" "ecs_tasks" {
   name_prefix = "${var.project_name}-ecs-tasks-"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port       = var.container_port
@@ -83,20 +60,18 @@ resource "aws_security_group" "ecs_tasks" {
 
 # Application Load Balancer Module
 module "alb" {
-  source = "terraform-aws-modules/alb/aws"
+  source  = "terraform-aws-modules/alb/aws"
   version = "~> 9.0"
 
   name               = "${var.project_name}-alb"
   load_balancer_type = "application"
 
-  vpc_id  = module.vpc.vpc_id
-  subnets = module.vpc.public_subnets
+  vpc_id          = var.vpc_id
+  subnets         = var.public_subnet_ids
   security_groups = [aws_security_group.alb.id]
 
-  # Disable deletion protection
   enable_deletion_protection = false
 
-  # HTTP listener only
   listeners = {
     http = {
       port     = 80
@@ -107,13 +82,12 @@ module "alb" {
     }
   }
 
-  # Target Groups
   target_groups = {
     ex-instance = {
-      name             = "${var.project_name}-tg"
-      protocol         = "HTTP"
-      port             = var.container_port
-      target_type      = "ip"
+      name              = "${var.project_name}-tg"
+      protocol          = "HTTP"
+      port              = var.container_port
+      target_type       = "ip"
       create_attachment = false
 
       health_check = {
@@ -145,9 +119,9 @@ resource "aws_cloudwatch_log_group" "ecs" {
   }
 }
 
-# ECS Module
+# ECS Cluster
 module "ecs_cluster" {
-  source = "terraform-aws-modules/ecs/aws//modules/cluster"
+  source  = "terraform-aws-modules/ecs/aws//modules/cluster"
   version = "~> 5.0"
 
   cluster_name = var.project_name
@@ -164,20 +138,18 @@ module "ecs_cluster" {
   }
 }
 
+# ECS Service
 module "ecs_service" {
-  source = "terraform-aws-modules/ecs/aws//modules/service"
+  source  = "terraform-aws-modules/ecs/aws//modules/service"
   version = "~> 5.0"
 
-  # Service
   name        = var.project_name
   cluster_arn = module.ecs_cluster.arn
 
-  # Enable autoscaling in the module
-  enable_autoscaling = true
+  enable_autoscaling       = true
   autoscaling_min_capacity = var.min_capacity
   autoscaling_max_capacity = var.max_capacity
 
-  # Auto-scaling policies
   autoscaling_policies = {
     cpu = {
       name        = "${var.project_name}-cpu-autoscaling"
@@ -201,11 +173,8 @@ module "ecs_service" {
     }
   }
 
-  depends_on = [
-    module.alb
-  ]
+  depends_on = [module.alb]
 
-  # Task Definition
   requires_compatibilities = ["FARGATE"]
   capacity_provider_strategy = {
     fargate = {
@@ -215,7 +184,6 @@ module "ecs_service" {
     }
   }
 
-  # Volumes for httpd writable directories
   volume = {
     apache_logs = {
       name = "apache-logs"
@@ -226,10 +194,13 @@ module "ecs_service" {
     tmp = {
       name = "tmp"
     }
+    var_run = {
+      name = "var-run"
+    }
   }
 
-  # Network
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids = var.private_subnet_ids
+
   security_group_rules = {
     alb_http_ingress = {
       type                     = "ingress"
@@ -247,11 +218,10 @@ module "ecs_service" {
     }
   }
 
-  # Container Definition(s)
   container_definitions = {
     (var.app_name) = {
       image = var.app_image
-      
+
       port_mappings = [
         {
           name          = var.app_name
@@ -259,8 +229,7 @@ module "ecs_service" {
           protocol      = "tcp"
         }
       ]
-      
-      # Mount writable volumes for httpd
+
       mount_points = [
         {
           sourceVolume  = "apache-logs"
@@ -276,9 +245,14 @@ module "ecs_service" {
           sourceVolume  = "tmp"
           containerPath = "/tmp"
           readOnly      = false
+        },
+        {
+          sourceVolume  = "var-run"
+          containerPath = "/var/run"
+          readOnly      = false
         }
       ]
-      
+
       enable_cloudwatch_logging = true
       log_configuration = {
         logDriver = "awslogs"
@@ -289,15 +263,13 @@ module "ecs_service" {
         }
       }
 
-      # Convert map to list of objects with name and value
       environment = [
         for k, v in var.environment_variables : {
           name  = k
           value = v
         }
       ]
-      
-      # Convert secrets map to list of objects with name and valueFrom
+
       secrets = [
         for k, v in var.secrets : {
           name      = k
@@ -315,12 +287,10 @@ module "ecs_service" {
     }
   }
 
-  # Task Definition
   cpu    = var.fargate_cpu
   memory = var.fargate_memory
 
-  # Service
-  desired_count = var.desired_count
+  desired_count          = var.desired_count
   enable_execute_command = true
 
   tags = {

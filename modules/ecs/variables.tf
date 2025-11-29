@@ -1,104 +1,78 @@
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-1"
+}
+
+variable "region" {
+  description = "AWS region"
+  type        = string
 }
 
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "my-ecs-app"
 }
 
 variable "app_name" {
   description = "Name of the application"
   type        = string
-  default     = "web-app"
 }
 
 variable "app_image" {
-  description = "Docker image to run in the ECS cluster"
+  description = "Docker image URI for the application"
   type        = string
-  default     = "nginx:latest"
 }
 
 variable "container_port" {
-  description = "Port exposed by the docker image to redirect traffic to"
+  description = "Port exposed by the container"
   type        = number
   default     = 80
 }
 
 variable "health_check_path" {
-  description = "Health check path for the load balancer"
+  description = "Path for health checks"
   type        = string
   default     = "/"
 }
 
 variable "fargate_cpu" {
-  description = "Fargate instance CPU units to provision (1 vCPU = 1024 CPU units)"
+  description = "Fargate CPU units"
   type        = number
   default     = 256
 }
 
 variable "fargate_memory" {
-  description = "Fargate instance memory to provision (in MiB)"
+  description = "Fargate memory in MB"
   type        = number
   default     = 512
 }
 
 variable "desired_count" {
-  description = "Number of docker containers to run"
+  description = "Desired number of tasks"
   type        = number
-  default     = 2
-}
-
-variable "environment_variables" {
-  description = "Environment variables to pass to the container"
-  type        = map(string)
-  default     = {}
-}
-
-variable "certificate_arn" {
-  description = "ARN of ACM certificate for HTTPS"
-  type        = string
-  default     = null
-}
-
-variable "enable_https" {
-  description = "Enable HTTPS listener"
-  type        = bool
-  default     = false
-}
-
-variable "secrets" {
-  description = "Secrets from AWS Secrets Manager or Systems Manager Parameter Store"
-  type = list(object({
-    name      = string
-    valueFrom = string
-  }))
-  default = []
+  default     = 1
 }
 
 variable "min_capacity" {
-  description = "Minimum number of tasks"
+  description = "Minimum number of tasks for autoscaling"
   type        = number
   default     = 1
 }
 
 variable "max_capacity" {
-  description = "Maximum number of tasks"
+  description = "Maximum number of tasks for autoscaling"
   type        = number
-  default     = 4
+  default     = 10
 }
 
 variable "autoscaling_cpu_target" {
-  description = "Target CPU utilization for autoscaling"
+  description = "Target CPU utilization percentage for autoscaling"
   type        = number
   default     = 70
 }
 
 variable "autoscaling_memory_target" {
-  description = "Target memory utilization for autoscaling"
+  description = "Target memory utilization percentage for autoscaling"
   type        = number
   default     = 80
 }
@@ -110,13 +84,35 @@ variable "log_retention_days" {
 }
 
 variable "enable_container_insights" {
-  description = "Enable CloudWatch Container Insights"
+  description = "Enable Container Insights for the cluster"
   type        = bool
-  default     = true
+  default     = false
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for VPC"
+variable "vpc_id" {
+  description = "VPC ID"
   type        = string
-  default     = "10.0.0.0/16"
 }
+
+variable "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  type        = list(string)
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
+}
+
+variable "environment_variables" {
+  description = "Environment variables for the container"
+  type        = map(string)
+  default     = {}
+}
+
+variable "secrets" {
+  description = "Secrets for the container"
+  type        = map(string)
+  default     = {}
+}
+
