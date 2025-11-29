@@ -15,9 +15,51 @@ locals {
   env_tfvars_file = "${get_terragrunt_dir()}/../_envcommon/${local.env}.tfvars"
   # Extract the additional tfvars files from the component_config
   tfvars_files     = try([for file in local.component_config["tfvar_files"]: "${get_terragrunt_dir()}/tfvars/${file}"], [])
+  
+  # Generate unique bucket name with account ID to avoid conflicts
+  account_id = get_aws_account_id()
+  state_bucket = "tf-state-${local.account_id}-${local.env}"
 }
 
 terraform_binary = "tofu"
+
+# Generate backend configuration
+remote_state {
+  backend = "s3"
+  
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
+  
+  config = {
+    bucket         = local.state_bucket
+    key            = "${path_relative_to_include()}/terraform.tfstate"
+    region         = local.aws_region
+    encrypt        = true
+    dynamodb_table = "tf-locks-${local.env}"
+    
+    # Terragrunt will automatically create the S3 bucket
+    skip_bucket_versioning         = false
+    skip_bucket_ssencryption       = false
+    skip_bucket_root_access        = false
+    skip_bucket_enforced_tls       = false
+    enable_lock_table_ssencryption = true
+    
+    # Optional: Enable versioning
+    s3_bucket_tags = {
+      Name        = "Terraform State Bucket"
+      Environment = local.env
+      ManagedBy   = "Terragrunt"
+    }
+    
+    dynamodb_table_tags = {
+      Name        = "Terraform Lock Table"
+      Environment = local.env
+      ManagedBy   = "Terragrunt"
+    }
+  }
+}
 
 terraform {
   extra_arguments "tfvars" {
