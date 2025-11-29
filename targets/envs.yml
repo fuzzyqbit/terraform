@@ -1,39 +1,151 @@
 dev:
   aws_region: "us-east-1"
+  
+  vpc:
+    inputs:
+      project_name: "shared-infrastructure"
+      environment: "dev"
+      vpc_cidr: "10.0.0.0/16"
+      az_count: 2
+      public_subnet_cidrs: ["10.0.1.0/24", "10.0.2.0/24"]
+      private_subnet_cidrs: ["10.0.11.0/24", "10.0.12.0/24"]
+      enable_nat_gateway: true
+      enable_vpn_gateway: false
+      enable_dns_hostnames: true
+      enable_dns_support: true
+      tags:
+        ManagedBy: "Terragrunt"
+        Environment: "dev"
+    tfvar_files:
+      - dev.tfvars
+  
   ecs:
-   inputs:
-     aws_region: "us-east-1"
-     region: "us-east-1"
-     project_name: "my-awesome-app"
-     app_name: "web-service"
-     app_image: "httpd:alpine"
-     container_port: 80
-     health_check_path: "/"
-     fargate_cpu: 256
-     fargate_memory: 512
-     desired_count: 3
-     environment_variables: 
-       ENV: "production"
-       LOG_LEVEL: "info"
-   tfvar_files:
+    inputs:
+      aws_region: "us-east-1"
+      region: "us-east-1"
+      project_name: "my-awesome-app"
+      app_name: "web-service"
+      app_image: "httpd:alpine"
+      container_port: 80
+      health_check_path: "/"
+      fargate_cpu: 256
+      fargate_memory: 512
+      desired_count: 3
+      min_capacity: 1
+      max_capacity: 10
+      autoscaling_cpu_target: 70
+      autoscaling_memory_target: 80
+      log_retention_days: 7
+      enable_container_insights: true
+      # VPC Configuration - from VPC module outputs
+      vpc_id: "vpc-08451aa3ba5248578"  # Replace with actual VPC ID from: 
+      public_subnet_ids: [ "subnet-0a72ebf2deaed5d15", "subnet-06a8e607b5ca52c86"] # From: terragrunt output public_subnets
+      private_subnet_ids: [ "subnet-05ee85dfb91937dd0", "subnet-0085c62cd0ee79714"] # From: terragrunt output private_subnets
+      environment_variables: 
+        ENV: "production"
+        LOG_LEVEL: "info"
+      secrets: {}
+    tfvar_files:
       - dev.tfvars
+  
   glue:
-   inputs:
-     aws_region: "us-east-1"
-     region: "us-east-1"
-     project_name: nyc-taxi-analytics
-     environment: dev
-     glue_version: "4.0"
-     python_version: "3"
-     worker_type: G.1X
-     number_of_workers: 2
-     max_retries: 1
-     timeout_minutes: 60
-     enable_continuous_log_filter: true
-     enable_metrics: true
-     enable_spark_ui: true
-     tags:
-       Team: DataEngineering
-       CostCenter: Analytics
-   tfvar_files:
+    inputs:
+      aws_region: "us-east-1"
+      region: "us-east-1"
+      project_name: "nyc-taxi-analytics"
+      environment: "dev"
+      glue_version: "4.0"
+      python_version: "3"
+      worker_type: "G.1X"
+      number_of_workers: 2
+      max_retries: 1
+      timeout_minutes: 60
+      enable_continuous_log_filter: true
+      enable_metrics: true
+      enable_spark_ui: true
+      enable_vpc: false
+      # VPC Configuration - from VPC module outputs (optional for Glue)
+      vpc_id: "vpc-xxx"
+      subnet_ids: ["subnet-zzz", "subnet-aaa"]
+      tags:
+        Team: "DataEngineering"
+        CostCenter: "Analytics"
+        Environment: "dev"
+    tfvar_files:
       - dev.tfvars
+
+prod:
+  aws_region: "us-east-1"
+  
+  vpc:
+    inputs:
+      project_name: "shared-infrastructure"
+      environment: "prod"
+      vpc_cidr: "10.1.0.0/16"
+      az_count: 3
+      public_subnet_cidrs: ["10.1.1.0/24", "10.1.2.0/24", "10.1.3.0/24"]
+      private_subnet_cidrs: ["10.1.11.0/24", "10.1.12.0/24", "10.1.13.0/24"]
+      enable_nat_gateway: true
+      enable_vpn_gateway: false
+      enable_dns_hostnames: true
+      enable_dns_support: true
+      tags:
+        ManagedBy: "Terragrunt"
+        Environment: "prod"
+    tfvar_files:
+      - prod.tfvars
+  
+  ecs:
+    inputs:
+      aws_region: "us-east-1"
+      region: "us-east-1"
+      project_name: "my-awesome-app"
+      app_name: "web-service"
+      app_image: "httpd:alpine"
+      container_port: 80
+      health_check_path: "/"
+      fargate_cpu: 512
+      fargate_memory: 1024
+      desired_count: 5
+      min_capacity: 3
+      max_capacity: 20
+      autoscaling_cpu_target: 60
+      autoscaling_memory_target: 70
+      log_retention_days: 30
+      enable_container_insights: true
+      # VPC Configuration - from VPC module outputs
+      vpc_id: "vpc-yyy"  # Replace with actual VPC ID
+      public_subnet_ids: ["subnet-yyy1", "subnet-yyy2", "subnet-yyy3"]
+      private_subnet_ids: ["subnet-yyy11", "subnet-yyy12", "subnet-yyy13"]
+      environment_variables: 
+        ENV: "production"
+        LOG_LEVEL: "warn"
+      secrets: {}
+    tfvar_files:
+      - prod.tfvars
+  
+  glue:
+    inputs:
+      aws_region: "us-east-1"
+      region: "us-east-1"
+      project_name: "nyc-taxi-analytics"
+      environment: "prod"
+      glue_version: "4.0"
+      python_version: "3"
+      worker_type: "G.2X"
+      number_of_workers: 5
+      max_retries: 2
+      timeout_minutes: 120
+      enable_continuous_log_filter: true
+      enable_metrics: true
+      enable_spark_ui: true
+      enable_vpc: false
+      # VPC Configuration - from VPC module outputs (optional for Glue)
+      vpc_id: "vpc-yyy"
+      subnet_ids: ["subnet-yyy11", "subnet-yyy12", "subnet-yyy13"]
+      tags:
+        Team: "DataEngineering"
+        CostCenter: "Analytics"
+        Environment: "prod"
+    tfvar_files:
+      - prod.tfvars
