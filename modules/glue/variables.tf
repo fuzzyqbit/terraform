@@ -93,20 +93,3 @@ variable "sample_data_month" {
   default     = 1
 }
 
-variable "vpc_id" {
-  description = "ID of the VPC (optional, for VPC-enabled Glue jobs)"
-  type        = string
-  default     = ""
-}
-
-variable "subnet_ids" {
-  description = "List of subnet IDs (optional, for VPC-enabled Glue jobs)"
-  type        = list(string)
-  default     = []
-}
-
-variable "enable_vpc" {
-  description = "Enable VPC configuration for Glue jobs"
-  type        = bool
-  default     = false
-}
