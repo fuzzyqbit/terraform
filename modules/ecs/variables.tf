@@ -104,6 +104,31 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
+variable "alb_security_group_id" {
+  description = "Security group ID of the ALB"
+  type        = string
+}
+
+variable "alb_arn" {
+  description = "ARN of the ALB (load balancer)"
+  type        = string
+}
+
+variable "alb_dns_name" {
+  description = "DNS name of the ALB"
+  type        = string
+}
+
+variable "alb_zone_id" {
+  description = "Hosted zone ID for the ALB"
+  type        = string
+}
+
+variable "alb_target_group_arn" {
+  description = "ARN of the ALB target group"
+  type        = string
+}
+
 variable "environment_variables" {
   description = "Environment variables for the container"
   type        = map(string)

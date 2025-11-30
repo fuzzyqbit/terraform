@@ -19,6 +19,20 @@ dev:
     tfvar_files:
       - dev.tfvars
   
+  alb:
+    inputs:
+      alb_name: "my-awesome-app-alb-dev"
+      internal: false
+      vpc_id: "vpc-06f8952ded34448b6"
+      subnet_ids: ["subnet-0c23820fc5cc4001e", "subnet-0d8c2285393cc1269"]
+      target_group_name: "my-awesome-app-tg-dev"
+      target_port: 80
+      tags:
+        ManagedBy: "Terragrunt"
+        Environment: "dev"
+    tfvar_files:
+      - dev.tfvars
+  
   ecs:
     inputs:
       aws_region: "us-east-1"
@@ -37,12 +51,21 @@ dev:
       autoscaling_memory_target: 80
       log_retention_days: 7
       enable_container_insights: true
-      # VPC Configuration - from VPC module outputs
-      vpc_id: "vpc-08451aa3ba5248578"  # Replace with actual VPC ID from: 
-      public_subnet_ids: [ "subnet-0a72ebf2deaed5d15", "subnet-06a8e607b5ca52c86"] # From: terragrunt output public_subnets
-      private_subnet_ids: [ "subnet-05ee85dfb91937dd0", "subnet-0085c62cd0ee79714"] # From: terragrunt output private_subnets
+      vpc_id: "vpc-06f8952ded34448b6"
+      public_subnet_ids: ["subnet-0c23820fc5cc4001e", "subnet-0c23820fc5cc4001e"]
+      private_subnet_ids: ["subnet-0472e2b689940fdf7", "subnet-07242537ea69e971b"]
+
+      # Wire ECS ALB-related variables to the ALB module outputs.
+      # Replace these interpolation patterns with whatever your driver expects
+      # (this uses module-style keys as an example).
+      alb_security_group_id: "sg-0b0113330df0b6048"
+      alb_target_group_arn: "arn:aws:elasticloadbalancing:us-east-1:668377652184:targetgroup/my-awesome-app-tg-dev/8e1ce4927c31f1bd"
+      alb_arn: "arn:aws:elasticloadbalancing:us-east-1:668377652184:loadbalancer/app/my-awesome-app-alb-dev/7ee76d8d50af89d9"
+      alb_dns_name: "my-awesome-app-alb-dev-351277166.us-east-1.elb.amazonaws.com"
+      alb_zone_id: "Z35SXDOTRQ7X7K"
+
       environment_variables: 
-        ENV: "production"
+        ENV: "dev"
         LOG_LEVEL: "info"
       secrets: {}
     tfvar_files:
@@ -64,9 +87,6 @@ dev:
       enable_metrics: true
       enable_spark_ui: true
       enable_vpc: false
-      # VPC Configuration - from VPC module outputs (optional for Glue)
-      vpc_id: "vpc-xxx"
-      subnet_ids: ["subnet-zzz", "subnet-aaa"]
       tags:
         Team: "DataEngineering"
         CostCenter: "Analytics"
@@ -95,6 +115,20 @@ prod:
     tfvar_files:
       - prod.tfvars
   
+  alb:
+    inputs:
+      alb_name: "my-awesome-app-alb-prod"
+      internal: false
+      vpc_id: "vpc-yyy"
+      subnet_ids: ["subnet-yyy1", "subnet-yyy2", "subnet-yyy3"]
+      target_group_name: "my-awesome-app-tg-prod"
+      target_port: 80
+      tags:
+        ManagedBy: "Terragrunt"
+        Environment: "prod"
+    tfvar_files:
+      - prod.tfvars
+  
   ecs:
     inputs:
       aws_region: "us-east-1"
@@ -113,10 +147,16 @@ prod:
       autoscaling_memory_target: 70
       log_retention_days: 30
       enable_container_insights: true
-      # VPC Configuration - from VPC module outputs
-      vpc_id: "vpc-yyy"  # Replace with actual VPC ID
+      vpc_id: "vpc-yyy"
       public_subnet_ids: ["subnet-yyy1", "subnet-yyy2", "subnet-yyy3"]
       private_subnet_ids: ["subnet-yyy11", "subnet-yyy12", "subnet-yyy13"]
+
+      alb_security_group_id: "${module.alb.security_group_id}"
+      alb_target_group_arn: "${module.alb.target_group_arn}"
+      alb_arn: "${module.alb.arn}"
+      alb_dns_name: "${module.alb.dns_name}"
+      alb_zone_id: "${module.alb.zone_id}"
+
       environment_variables: 
         ENV: "production"
         LOG_LEVEL: "warn"
@@ -140,9 +180,6 @@ prod:
       enable_metrics: true
       enable_spark_ui: true
       enable_vpc: false
-      # VPC Configuration - from VPC module outputs (optional for Glue)
-      vpc_id: "vpc-yyy"
-      subnet_ids: ["subnet-yyy11", "subnet-yyy12", "subnet-yyy13"]
       tags:
         Team: "DataEngineering"
         CostCenter: "Analytics"

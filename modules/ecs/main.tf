@@ -4,33 +4,6 @@ data "aws_availability_zones" "available" {
 }
 
 # Security Groups
-resource "aws_security_group" "alb" {
-  name_prefix = "${var.project_name}-alb-"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-alb-sg"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
 resource "aws_security_group" "ecs_tasks" {
   name_prefix = "${var.project_name}-ecs-tasks-"
   vpc_id      = var.vpc_id
@@ -39,7 +12,7 @@ resource "aws_security_group" "ecs_tasks" {
     from_port       = var.container_port
     to_port         = var.container_port
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    security_groups = [var.alb_security_group_id]
   }
 
   egress {
@@ -55,57 +28,6 @@ resource "aws_security_group" "ecs_tasks" {
 
   lifecycle {
     create_before_destroy = true
-  }
-}
-
-# Application Load Balancer Module
-module "alb" {
-  source  = "terraform-aws-modules/alb/aws"
-  version = "~> 9.0"
-
-  name               = "${var.project_name}-alb"
-  load_balancer_type = "application"
-
-  vpc_id          = var.vpc_id
-  subnets         = var.public_subnet_ids
-  security_groups = [aws_security_group.alb.id]
-
-  enable_deletion_protection = false
-
-  listeners = {
-    http = {
-      port     = 80
-      protocol = "HTTP"
-      forward = {
-        target_group_key = "ex-instance"
-      }
-    }
-  }
-
-  target_groups = {
-    ex-instance = {
-      name              = "${var.project_name}-tg"
-      protocol          = "HTTP"
-      port              = var.container_port
-      target_type       = "ip"
-      create_attachment = false
-
-      health_check = {
-        enabled             = true
-        healthy_threshold   = 2
-        interval            = 30
-        matcher             = "200-399"
-        path                = "/"
-        port                = "traffic-port"
-        protocol            = "HTTP"
-        timeout             = 10
-        unhealthy_threshold = 3
-      }
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-alb"
   }
 }
 
@@ -173,8 +95,6 @@ module "ecs_service" {
     }
   }
 
-  depends_on = [module.alb]
-
   requires_compatibilities = ["FARGATE"]
   capacity_provider_strategy = {
     fargate = {
@@ -207,7 +127,7 @@ module "ecs_service" {
       from_port                = var.container_port
       to_port                  = var.container_port
       protocol                 = "tcp"
-      source_security_group_id = aws_security_group.alb.id
+      source_security_group_id = var.alb_security_group_id
     }
     egress_all = {
       type        = "egress"
@@ -281,7 +201,7 @@ module "ecs_service" {
 
   load_balancer = {
     service = {
-      target_group_arn = module.alb.target_groups["ex-instance"].arn
+      target_group_arn = var.alb_target_group_arn
       container_name   = var.app_name
       container_port   = var.container_port
     }
