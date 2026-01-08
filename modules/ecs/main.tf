@@ -23,7 +23,12 @@ resource "aws_security_group" "ecs_tasks" {
   }
 
   tags = {
-    Name = "${var.project_name}-ecs-tasks-sg"
+    Name                 = "${var.project_name}-ecs-tasks-sg"
+    yor_name             = "ecs_tasks"
+    yor_trace            = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    git_repo             = "terraform"
+    git_file             = "modules/ecs/main.tf"
+    git_last_modified_by = "claude"
   }
 
   lifecycle {
@@ -37,7 +42,12 @@ resource "aws_cloudwatch_log_group" "ecs" {
   retention_in_days = var.log_retention_days
 
   tags = {
-    Name = "${var.project_name}-logs"
+    Name                 = "${var.project_name}-logs"
+    yor_name             = "ecs"
+    yor_trace            = "b2c3d4e5-f6a7-8901-bcde-f23456789012"
+    git_repo             = "terraform"
+    git_file             = "modules/ecs/main.tf"
+    git_last_modified_by = "claude"
   }
 }
 
@@ -56,7 +66,12 @@ module "ecs_cluster" {
   ] : []
 
   tags = {
-    Name = "${var.project_name}-cluster"
+    Name                 = "${var.project_name}-cluster"
+    yor_name             = "ecs_cluster"
+    yor_trace            = "c3d4e5f6-a7b8-9012-cdef-345678901234"
+    git_repo             = "terraform"
+    git_file             = "modules/ecs/main.tf"
+    git_last_modified_by = "claude"
   }
 }
 
@@ -214,6 +229,11 @@ module "ecs_service" {
   enable_execute_command = true
 
   tags = {
-    Name = "${var.project_name}-service"
+    Name                 = "${var.project_name}-service"
+    yor_name             = "ecs_service"
+    yor_trace            = "d4e5f6a7-b8c9-0123-defa-456789012345"
+    git_repo             = "terraform"
+    git_file             = "modules/ecs/main.tf"
+    git_last_modified_by = "claude"
   }
 }
