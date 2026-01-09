@@ -19,6 +19,7 @@ module "vpc" {
   enable_dns_support   = var.enable_dns_support
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-vpc"
       Environment = var.environment

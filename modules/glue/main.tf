@@ -21,6 +21,7 @@ module "s3_raw_data" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-raw-data"
       Environment = var.environment
@@ -58,6 +59,7 @@ module "s3_processed_data" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-processed-data"
       Environment = var.environment
@@ -95,6 +97,7 @@ module "s3_scripts" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-scripts"
       Environment = var.environment
@@ -138,6 +141,7 @@ module "s3_temp" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-temp"
       Environment = var.environment
@@ -163,17 +167,7 @@ resource "aws_s3_object" "etl_script" {
   source = "${path.module}/scripts/nyc_taxi_etl.py"
   etag   = filemd5("${path.module}/scripts/nyc_taxi_etl.py")
 
-  tags = merge(var.tags, {
-    git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
-    git_file             = "modules/glue/main.tf"
-    git_last_modified_at = "2025-11-29 00:00:32"
-    git_last_modified_by = "quantum@koala.io"
-    git_modifiers        = "quantum"
-    git_org              = "fuzzyqbit"
-    git_repo             = "terraform"
-    yor_name             = "etl_script"
-    yor_trace            = "14ff958f-1f0f-4fd8-ad70-e5c032b29172"
-  })
+  tags = merge(var.common_tags, { Name = "nyc_taxi_etl.py" }, var.tags)
 }
 
 # IAM Role for Glue
@@ -195,6 +189,7 @@ resource "aws_iam_role" "glue" {
   assume_role_policy = data.aws_iam_policy_document.glue_assume_role.json
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-glue-role"
       Environment = var.environment
@@ -262,6 +257,7 @@ resource "aws_glue_catalog_database" "this" {
   description = "Database for ${var.project_name}"
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-database"
       Environment = var.environment
@@ -303,6 +299,7 @@ resource "aws_glue_crawler" "raw_data" {
   })
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-raw-data-crawler"
       Environment = var.environment
@@ -357,6 +354,7 @@ resource "aws_glue_job" "etl" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-nyc-taxi-etl"
       Environment = var.environment
@@ -392,6 +390,7 @@ resource "aws_glue_trigger" "daily" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-daily-trigger"
       Environment = var.environment
@@ -416,6 +415,7 @@ resource "aws_cloudwatch_log_group" "glue_job" {
   retention_in_days = 7
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-glue-job-logs"
       Environment = var.environment

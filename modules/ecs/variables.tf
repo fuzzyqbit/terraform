@@ -140,3 +140,15 @@ variable "secrets" {
   type        = map(string)
   default     = {}
 }
+
+variable "tags" {
+  description = "Tags to apply to resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "common_tags" {
+  description = "Common tags including Yor tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}

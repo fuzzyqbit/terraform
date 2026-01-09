@@ -1,6 +1,6 @@
 dev:
   aws_region: "us-east-1"
-  
+
   vpc:
     inputs:
       project_name: "shared-infrastructure"
@@ -81,7 +81,7 @@ dev:
 
 prod:
   aws_region: "us-east-1"
-  
+
   vpc:
     inputs:
       project_name: "shared-infrastructure"

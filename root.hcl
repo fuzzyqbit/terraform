@@ -1,6 +1,6 @@
 locals {
   env = get_env("TF_VAR_ENV", "dev")
-  
+
   # Extract the top level block with the env name as the key
   env_config       = yamldecode(file("${get_terragrunt_dir()}/../envs.yml"))[local.env]
   # Extract the aws_region from the env_config
@@ -14,7 +14,7 @@ locals {
   # Extract the env tfvar file
   env_tfvars_file = "${get_terragrunt_dir()}/../_envcommon/${local.env}.tfvars"
   # Extract the additional tfvars files from the component_config
-  tfvars_files     = try([for file in local.component_config["tfvar_files"]: "${get_terragrunt_dir()}/tfvars/${file}"], [])
+  tfvars_files = try([for file in local.component_config["tfvar_files"] : "${get_terragrunt_dir()}/tfvars/${file}"], [])
   
   # Generate unique bucket name with account ID to avoid conflicts
   account_id = get_aws_account_id()
@@ -80,4 +80,4 @@ terraform {
   }
 }
 
-inputs = merge(local.inputs, {})
+inputs = local.inputs

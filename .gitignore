@@ -14,6 +14,7 @@ override.tf.json
 *.tfvars
 *.tfvars.json
 !example.tfvars
+!targets/**/tfvars/*.tfvars
 
 # Terragrunt
 .terragrunt-cache/

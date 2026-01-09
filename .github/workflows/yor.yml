@@ -1,4 +1,4 @@
-name: Yor Tagging
+name: Update Yor Tags
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  yor:
+  update-yor-tags:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,17 +21,45 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
 
-      - name: Run Yor
-        uses: bridgecrewio/yor-action@main
-        with:
-          directory: .
-          tag_groups: git,code2cloud
+      - name: Update Yor tags in tfvars
+        env:
+          GIT_REPO: ${{ github.repository }}
+          GIT_ORG: ${{ github.repository_owner }}
+          GIT_COMMIT: ${{ github.sha }}
+          GIT_LAST_MODIFIED_BY: ${{ github.actor }}
+        run: |
+          GIT_LAST_MODIFIED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          REPO_NAME="${GIT_REPO##*/}"
+
+          for tfvars in targets/*/tfvars/dev.tfvars; do
+            if [ -f "$tfvars" ]; then
+              TARGET_DIR=$(dirname $(dirname "$tfvars"))
+              TARGET_NAME=$(basename "$TARGET_DIR")
+              GIT_FILE="modules/${TARGET_NAME}/main.tf"
+              YOR_TRACE="${TARGET_NAME}-dev-$(cat /proc/sys/kernel/random/uuid)"
+
+              cat > "$tfvars" << TFVARS_EOF
+common_tags = {
+  git_repo             = "${REPO_NAME}"
+  git_org              = "${GIT_ORG}"
+  git_commit           = "${GIT_COMMIT:0:8}"
+  git_file             = "${GIT_FILE}"
+  git_last_modified_by = "${GIT_LAST_MODIFIED_BY}"
+  git_last_modified_at = "${GIT_LAST_MODIFIED_AT}"
+  yor_trace            = "${YOR_TRACE}"
+  ManagedBy            = "Terraform"
+  Environment          = "dev"
+}
+TFVARS_EOF
+              echo "Updated $tfvars"
+            fi
+          done
 
       - name: Commit Yor tags
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git diff --staged --quiet || git commit -m "chore: update Yor tags [skip ci]"
+          git add targets/*/tfvars/*.tfvars
+          git diff --staged --quiet || git commit -m "chore: update Yor tags in tfvars [skip ci]"
           git push
