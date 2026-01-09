@@ -1,6 +1,6 @@
 locals {
   env = get_env("TF_VAR_ENV", "dev")
-  
+
   # Extract the top level block with the env name as the key
   env_config       = yamldecode(file("${get_terragrunt_dir()}/../envs.yml"))[local.env]
   # Extract the aws_region from the env_config
@@ -10,6 +10,12 @@ locals {
   component_config = local.env_config[local.component]
   # Extract the direct inputs from the component_config
   inputs           = try(local.component_config["inputs"], {})
+
+  # Extract common Yor tags from env config
+  yor_tags = try(local.env_config["yor_tags"], {})
+  # Extract component-specific tags and merge with Yor tags
+  component_tags = try(local.inputs["tags"], {})
+  merged_tags    = merge(local.yor_tags, local.component_tags)
 
   # Extract the env tfvar file
   env_tfvars_file = "${get_terragrunt_dir()}/../_envcommon/${local.env}.tfvars"
@@ -80,4 +86,7 @@ terraform {
   }
 }
 
-inputs = merge(local.inputs, {})
+# Merge inputs with yor_tags (component tags override yor_tags)
+inputs = merge(local.inputs, {
+  tags = local.merged_tags
+})

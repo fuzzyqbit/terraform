@@ -1,6 +1,12 @@
 dev:
   aws_region: "us-east-1"
-  
+
+  # Common Yor tags applied to all components
+  yor_tags:
+    git_repo: "terraform"
+    git_org: "fuzzyqbit"
+    yor_trace_prefix: "dev"
+
   vpc:
     inputs:
       project_name: "shared-infrastructure"
@@ -81,7 +87,13 @@ dev:
 
 prod:
   aws_region: "us-east-1"
-  
+
+  # Common Yor tags applied to all components
+  yor_tags:
+    git_repo: "terraform"
+    git_org: "fuzzyqbit"
+    yor_trace_prefix: "prod"
+
   vpc:
     inputs:
       project_name: "shared-infrastructure"
