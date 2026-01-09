@@ -23,6 +23,7 @@ resource "aws_security_group" "ecs_tasks" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name     = "${var.project_name}-ecs-tasks-sg"
       yor_name = "ecs_tasks"
@@ -41,6 +42,7 @@ resource "aws_cloudwatch_log_group" "ecs" {
   retention_in_days = var.log_retention_days
 
   tags = merge(
+    var.common_tags,
     {
       Name     = "${var.project_name}-logs"
       yor_name = "ecs_logs"
@@ -64,6 +66,7 @@ module "ecs_cluster" {
   ] : []
 
   tags = merge(
+    var.common_tags,
     {
       Name     = "${var.project_name}-cluster"
       yor_name = "ecs_cluster"
@@ -226,6 +229,7 @@ module "ecs_service" {
   enable_execute_command = true
 
   tags = merge(
+    var.common_tags,
     {
       Name     = "${var.project_name}-service"
       yor_name = "ecs_service"

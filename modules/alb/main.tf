@@ -5,7 +5,7 @@ resource "aws_lb" "main" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.subnet_ids
 
-  tags = var.tags
+  tags = merge(var.common_tags, { Name = var.alb_name }, var.tags)
 }
 
 resource "aws_security_group" "alb" {
@@ -27,7 +27,7 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = var.tags
+  tags = merge(var.common_tags, { Name = "${var.alb_name}-sg" }, var.tags)
 }
 
 resource "aws_lb_target_group" "main" {
@@ -37,7 +37,7 @@ resource "aws_lb_target_group" "main" {
   vpc_id      = var.vpc_id
   target_type = "ip"
 
-  tags = var.tags
+  tags = merge(var.common_tags, { Name = var.target_group_name }, var.tags)
 }
 
 resource "aws_lb_listener" "main" {
@@ -50,5 +50,5 @@ resource "aws_lb_listener" "main" {
     target_group_arn = aws_lb_target_group.main.arn
   }
 
-  tags = var.tags
+  tags = merge(var.common_tags, { Name = "${var.alb_name}-listener" }, var.tags)
 }

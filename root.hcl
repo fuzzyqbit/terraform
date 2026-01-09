@@ -11,16 +11,10 @@ locals {
   # Extract the direct inputs from the component_config
   inputs           = try(local.component_config["inputs"], {})
 
-  # Extract common Yor tags from env config
-  yor_tags = try(local.env_config["yor_tags"], {})
-  # Extract component-specific tags and merge with Yor tags
-  component_tags = try(local.inputs["tags"], {})
-  merged_tags    = merge(local.yor_tags, local.component_tags)
-
   # Extract the env tfvar file
   env_tfvars_file = "${get_terragrunt_dir()}/../_envcommon/${local.env}.tfvars"
   # Extract the additional tfvars files from the component_config
-  tfvars_files     = try([for file in local.component_config["tfvar_files"]: "${get_terragrunt_dir()}/tfvars/${file}"], [])
+  tfvars_files = try([for file in local.component_config["tfvar_files"] : "${get_terragrunt_dir()}/tfvars/${file}"], [])
   
   # Generate unique bucket name with account ID to avoid conflicts
   account_id = get_aws_account_id()
@@ -86,7 +80,4 @@ terraform {
   }
 }
 
-# Merge inputs with yor_tags (component tags override yor_tags)
-inputs = merge(local.inputs, {
-  tags = local.merged_tags
-})
+inputs = local.inputs

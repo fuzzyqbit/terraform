@@ -21,6 +21,7 @@ module "s3_raw_data" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-raw-data"
       Environment = var.environment
@@ -48,6 +49,7 @@ module "s3_processed_data" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-processed-data"
       Environment = var.environment
@@ -75,6 +77,7 @@ module "s3_scripts" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-scripts"
       Environment = var.environment
@@ -108,6 +111,7 @@ module "s3_temp" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-temp"
       Environment = var.environment
@@ -123,7 +127,7 @@ resource "aws_s3_object" "etl_script" {
   source = "${path.module}/scripts/nyc_taxi_etl.py"
   etag   = filemd5("${path.module}/scripts/nyc_taxi_etl.py")
 
-  tags = var.tags
+  tags = merge(var.common_tags, { Name = "nyc_taxi_etl.py" }, var.tags)
 }
 
 # IAM Role for Glue
@@ -145,6 +149,7 @@ resource "aws_iam_role" "glue" {
   assume_role_policy = data.aws_iam_policy_document.glue_assume_role.json
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-glue-role"
       Environment = var.environment
@@ -202,6 +207,7 @@ resource "aws_glue_catalog_database" "this" {
   description = "Database for ${var.project_name}"
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-database"
       Environment = var.environment
@@ -233,6 +239,7 @@ resource "aws_glue_crawler" "raw_data" {
   })
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-raw-data-crawler"
       Environment = var.environment
@@ -277,6 +284,7 @@ resource "aws_glue_job" "etl" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-nyc-taxi-etl"
       Environment = var.environment
@@ -302,6 +310,7 @@ resource "aws_glue_trigger" "daily" {
   }
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-daily-trigger"
       Environment = var.environment
@@ -316,6 +325,7 @@ resource "aws_cloudwatch_log_group" "glue_job" {
   retention_in_days = 7
 
   tags = merge(
+    var.common_tags,
     {
       Name        = "${var.project_name}-glue-job-logs"
       Environment = var.environment

@@ -75,6 +75,12 @@ variable "tags" {
   default     = {}
 }
 
+variable "common_tags" {
+  description = "Common tags including Yor tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
+
 variable "download_sample_data" {
   description = "Whether to download NYC taxi sample data"
   type        = bool
