@@ -7,7 +7,7 @@ module "s3_raw_data" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-raw-data-${data.aws_caller_identity.current.account_id}"
-  
+
   versioning = {
     enabled = true
   }
@@ -27,7 +27,17 @@ module "s3_raw_data" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "s3_raw_data"
+      yor_trace            = "ef04607c-0b35-481c-bd87-b238745da267"
+  })
 }
 
 module "s3_processed_data" {
@@ -35,7 +45,7 @@ module "s3_processed_data" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-processed-data-${data.aws_caller_identity.current.account_id}"
-  
+
   versioning = {
     enabled = true
   }
@@ -55,7 +65,17 @@ module "s3_processed_data" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "s3_processed_data"
+      yor_trace            = "e9251d1f-9ba1-4716-8d03-94ab3d4577d6"
+  })
 }
 
 module "s3_scripts" {
@@ -63,7 +83,7 @@ module "s3_scripts" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-scripts-${data.aws_caller_identity.current.account_id}"
-  
+
   versioning = {
     enabled = true
   }
@@ -83,7 +103,17 @@ module "s3_scripts" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "s3_scripts"
+      yor_trace            = "fbaffaed-385b-465f-b378-199011503b3a"
+  })
 }
 
 module "s3_temp" {
@@ -91,7 +121,7 @@ module "s3_temp" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-temp-${data.aws_caller_identity.current.account_id}"
-  
+
   lifecycle_rule = [
     {
       id      = "delete-old-files"
@@ -117,7 +147,17 @@ module "s3_temp" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "s3_temp"
+      yor_trace            = "dcf0bbeb-78e2-44b8-8e33-81cfa4766b89"
+  })
 }
 
 # Upload Glue scripts
@@ -155,7 +195,17 @@ resource "aws_iam_role" "glue" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "glue"
+      yor_trace            = "5e788900-7369-43a0-870a-578f9b66c5fa"
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "glue_service" {
@@ -213,7 +263,17 @@ resource "aws_glue_catalog_database" "this" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "this"
+      yor_trace            = "cf765e0b-10b9-4985-a77c-402c6a3ab520"
+  })
 }
 
 # Glue Crawler for raw data
@@ -245,7 +305,17 @@ resource "aws_glue_crawler" "raw_data" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "raw_data"
+      yor_trace            = "33dc38d5-d5ef-4086-a0fa-12ad6847c962"
+  })
 }
 
 # Glue Job
@@ -290,7 +360,17 @@ resource "aws_glue_job" "etl" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "etl"
+      yor_trace            = "5dac45a6-8ad3-4829-957e-8e64044e85d7"
+  })
 
   depends_on = [
     aws_s3_object.etl_script,
@@ -316,7 +396,17 @@ resource "aws_glue_trigger" "daily" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "daily"
+      yor_trace            = "320402de-1d41-43b2-b860-18d3815633f7"
+  })
 }
 
 # CloudWatch Log Groups
@@ -331,7 +421,17 @@ resource "aws_cloudwatch_log_group" "glue_job" {
       Environment = var.environment
     },
     var.tags
-  )
+    , {
+      git_commit           = "86c13e78e44286b8ae15c552e8647eb2462cf97a"
+      git_file             = "modules/glue/main.tf"
+      git_last_modified_at = "2025-11-29 00:00:32"
+      git_last_modified_by = "quantum@koala.io"
+      git_modifiers        = "quantum"
+      git_org              = "fuzzyqbit"
+      git_repo             = "terraform"
+      yor_name             = "glue_job"
+      yor_trace            = "23be2c5a-6c73-46d4-8370-415f3d3bc0f4"
+  })
 }
 
 # Download and upload NYC taxi data
