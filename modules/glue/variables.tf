@@ -92,4 +92,3 @@ variable "sample_data_month" {
   type        = number
   default     = 1
 }
-
