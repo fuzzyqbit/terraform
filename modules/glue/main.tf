@@ -7,11 +7,7 @@ module "s3_raw_data" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-raw-data-${data.aws_caller_identity.current.account_id}"
-<<<<<<< Updated upstream
-=======
-  
   force_destroy = var.force_destroy_buckets
->>>>>>> Stashed changes
 
   versioning = {
     enabled = true
@@ -40,11 +36,7 @@ module "s3_processed_data" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-processed-data-${data.aws_caller_identity.current.account_id}"
-<<<<<<< Updated upstream
-=======
-  
   force_destroy = var.force_destroy_buckets
->>>>>>> Stashed changes
 
   versioning = {
     enabled = true
@@ -73,11 +65,7 @@ module "s3_scripts" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-scripts-${data.aws_caller_identity.current.account_id}"
-<<<<<<< Updated upstream
-=======
-  
   force_destroy = var.force_destroy_buckets
->>>>>>> Stashed changes
 
   versioning = {
     enabled = true
@@ -106,11 +94,7 @@ module "s3_temp" {
   version = "~> 4.0"
 
   bucket = "${var.project_name}-temp-${data.aws_caller_identity.current.account_id}"
-<<<<<<< Updated upstream
-=======
-  
   force_destroy = var.force_destroy_buckets
->>>>>>> Stashed changes
 
   lifecycle_rule = [
     {
