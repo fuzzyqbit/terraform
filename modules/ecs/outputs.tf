@@ -23,6 +23,11 @@ output "ecs_cluster_arn" {
   value       = module.ecs_cluster.arn
 }
 
+output "ecs_cluster_id" {
+  description = "ID of the ECS cluster"
+  value       = module.ecs_cluster.id
+}
+
 output "ecs_service_name" {
   description = "Name of the ECS service"
   value       = module.ecs_service.name
@@ -57,3 +62,4 @@ output "alb_zone_id" {
   description = "ALB zone ID passed into the ECS module"
   value       = var.alb_zone_id
 }
+

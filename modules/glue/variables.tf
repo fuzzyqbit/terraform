@@ -69,6 +69,12 @@ variable "enable_spark_ui" {
   default     = true
 }
 
+variable "force_destroy_buckets" {
+  description = "Allow destruction of non-empty S3 buckets"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags"
   type        = map(string)
