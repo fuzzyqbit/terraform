@@ -1,6 +1,5 @@
 dev:
   aws_region: "us-east-1"
-
   vpc:
     inputs:
       project_name: "shared-infrastructure"
@@ -42,7 +41,7 @@ dev:
       health_check_path: "/"
       fargate_cpu: 256
       fargate_memory: 512
-      desired_count: 3
+      desired_count: 1
       min_capacity: 1
       max_capacity: 10
       autoscaling_cpu_target: 70
@@ -55,6 +54,30 @@ dev:
       secrets: {}
     tfvar_files:
       - dev.tfvars
+  
+  opensearch:
+    inputs:
+      project_name: "movie-search"
+      domain_name: "movie-search-dev"
+      engine_version: "OpenSearch_2.11"
+      instance_type: "t3.small.search"
+      instance_count: 1
+      dedicated_master_enabled: false
+      zone_awareness_enabled: false
+      availability_zone_count: 2
+      volume_size: 10
+      volume_type: "gp3"
+      iops: 3000
+      throughput: 125
+      master_user_name: "admin"
+      master_user_password: "Admin123!SecurePassword"  # TODO: Use AWS Secrets Manager
+      force_destroy_bucket: true
+      tags:
+        Environment: "dev"
+        ManagedBy: "Terragrunt"
+    tfvar_files:
+      - dev.tfvars
+  
   
   glue:
     inputs:
@@ -72,91 +95,11 @@ dev:
       enable_metrics: true
       enable_spark_ui: true
       enable_vpc: false
+      force_destroy_buckets: true
       tags:
         Team: "DataEngineering"
         CostCenter: "Analytics"
         Environment: "dev"
     tfvar_files:
       - dev.tfvars
-
-prod:
-  aws_region: "us-east-1"
-
-  vpc:
-    inputs:
-      project_name: "shared-infrastructure"
-      environment: "prod"
-      vpc_cidr: "10.1.0.0/16"
-      az_count: 3
-      public_subnet_cidrs: ["10.1.1.0/24", "10.1.2.0/24", "10.1.3.0/24"]
-      private_subnet_cidrs: ["10.1.11.0/24", "10.1.12.0/24", "10.1.13.0/24"]
-      enable_nat_gateway: true
-      enable_vpn_gateway: false
-      enable_dns_hostnames: true
-      enable_dns_support: true
-      tags:
-        ManagedBy: "Terragrunt"
-        Environment: "prod"
-    tfvar_files:
-      - prod.tfvars
-  
-  alb:
-    inputs:
-      alb_name: "my-awesome-app-alb-prod"
-      internal: false
-      target_group_name: "my-awesome-app-tg-prod"
-      target_port: 80
-      tags:
-        ManagedBy: "Terragrunt"
-        Environment: "prod"
-    tfvar_files:
-      - prod.tfvars
-  
-  ecs:
-    inputs:
-      aws_region: "us-east-1"
-      region: "us-east-1"
-      project_name: "my-awesome-app"
-      app_name: "web-service"
-      app_image: "httpd:alpine"
-      container_port: 80
-      health_check_path: "/"
-      fargate_cpu: 512
-      fargate_memory: 1024
-      desired_count: 5
-      min_capacity: 3
-      max_capacity: 20
-      autoscaling_cpu_target: 60
-      autoscaling_memory_target: 70
-      log_retention_days: 30
-      enable_container_insights: true
-      environment_variables: 
-        ENV: "production"
-        LOG_LEVEL: "warn"
-      secrets: {}
-    tfvar_files:
-      - prod.tfvars
-  
-  glue:
-    inputs:
-      aws_region: "us-east-1"
-      region: "us-east-1"
-      project_name: "nyc-taxi-analytics"
-      environment: "prod"
-      glue_version: "4.0"
-      python_version: "3"
-      worker_type: "G.2X"
-      number_of_workers: 5
-      max_retries: 2
-      timeout_minutes: 120
-      enable_continuous_log_filter: true
-      enable_metrics: true
-      enable_spark_ui: true
-      enable_vpc: false
-      tags:
-        Team: "DataEngineering"
-        CostCenter: "Analytics"
-        Environment: "prod"
-    tfvar_files:
-      - prod.tfvars
 
