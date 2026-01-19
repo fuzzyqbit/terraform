@@ -1,9 +1,17 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-# Use existing Service-Linked Role for OpenSearch
-data "aws_iam_role" "opensearch_slr" {
-  name = "AWSServiceRoleForAmazonOpenSearchService"
+# Create Service-Linked Role for OpenSearch
+resource "aws_iam_service_linked_role" "opensearch" {
+  aws_service_name = "opensearchservice.amazonaws.com"
+  description      = "Service-linked role for Amazon OpenSearch Service"
+}
+
+# Wait for service-linked role to propagate
+resource "time_sleep" "wait_for_slr" {
+  depends_on = [aws_iam_service_linked_role.opensearch]
+
+  create_duration = "60s"
 }
 
 # Security Group for OpenSearch
@@ -175,7 +183,7 @@ resource "aws_opensearch_domain" "main" {
   )
 
   depends_on = [
-    data.aws_iam_role.opensearch_slr,
+    time_sleep.wait_for_slr,
     aws_cloudwatch_log_group.opensearch,
     aws_cloudwatch_log_group.opensearch_app,
     aws_cloudwatch_log_group.opensearch_error,

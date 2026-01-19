@@ -124,14 +124,19 @@ module "s3_temp" {
   )
 }
 
-# Upload Glue scripts
+# Upload Glue scripts - Use minimal tags for S3 objects (10 tag limit)
 resource "aws_s3_object" "etl_script" {
   bucket = module.s3_scripts.s3_bucket_id
   key    = "scripts/nyc_taxi_etl.py"
   source = "${path.module}/scripts/nyc_taxi_etl.py"
   etag   = filemd5("${path.module}/scripts/nyc_taxi_etl.py")
 
-  tags = merge(var.common_tags, { Name = "nyc_taxi_etl.py" }, var.tags)
+  # S3 objects have a 10 tag limit - only use essential tags
+  tags = {
+    Name        = "nyc_taxi_etl.py"
+      Environment = var.environment
+    Component   = "glue-etl"
+}
 }
 
 # IAM Role for Glue
@@ -151,7 +156,6 @@ data "aws_iam_policy_document" "glue_assume_role" {
 resource "aws_iam_role" "glue" {
   name               = "${var.project_name}-glue-role"
   assume_role_policy = data.aws_iam_policy_document.glue_assume_role.json
-
   tags = merge(
     var.common_tags,
     {
@@ -209,7 +213,6 @@ resource "aws_iam_role_policy" "glue_s3_access" {
 resource "aws_glue_catalog_database" "this" {
   name        = "${var.project_name}_database"
   description = "Database for ${var.project_name}"
-
   tags = merge(
     var.common_tags,
     {
@@ -241,7 +244,6 @@ resource "aws_glue_crawler" "raw_data" {
       TableGroupingPolicy = "CombineCompatibleSchemas"
     }
   })
-
   tags = merge(
     var.common_tags,
     {
@@ -380,3 +382,4 @@ resource "null_resource" "run_crawler" {
     data_upload = null_resource.download_nyc_data.id
   }
 }
+
