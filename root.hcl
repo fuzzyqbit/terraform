@@ -80,4 +80,4 @@ terraform {
   }
 }
 
-inputs = local.inputs
+inputs = merge(local.inputs, {})
